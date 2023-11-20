@@ -18,7 +18,7 @@ targetNamespaces: ""
 # -- excludeNamespaces is a comma separated list of namespaces (or glob patterns)
 # to be excluded from scanning. Only applicable in the all namespaces install
 # mode, i.e. when the targetNamespaces values is a blank string.
-excludeNamespaces: ""
+excludeNamespaces: "rbd-system,kube-system,trivy-system"
 
 # -- targetWorkloads is a comma seperated list of Kubernetes workload resources
 # to be included in the vulnerability and config-audit scans
@@ -91,7 +91,7 @@ operator:
   accessGlobalSecretsAndServiceAccount: true
   # -- builtInTrivyServer The flag enable the usage of built-in trivy server in cluster ,its also override the following trivy params with built-in values
   # trivy.mode = ClientServer and serverURL = http://<serverServiceName>.<trivy operator namespace>:4975
-  builtInTrivyServer: false
+  builtInTrivyServer: true
   # -- controllerCacheSyncTimeout the duration to wait for controller resources cache sync (default: 5m).
   controllerCacheSyncTimeout: "5m"
 
@@ -134,17 +134,18 @@ operator:
   webhookSendDeletedReports: false
 
   # -- privateRegistryScanSecretsNames is map of namespace:secrets, secrets are comma seperated which can be used to authenticate in private registries in case if there no imagePullSecrets provided example : {"mynamespace":"mySecrets,anotherSecret"}
-  privateRegistryScanSecretsNames: {}
+  privateRegistryScanSecretsNames:
+    trivy-system: rbd-hub-credentials
 
   # -- mergeRbacFindingWithConfigAudit the flag to enable merging rbac finding with config-audit report
   mergeRbacFindingWithConfigAudit: false
 
 image:
-  registry: "ghcr.io"
-  repository: "aquasecurity/trivy-operator"
+  registry: "registry.cn-hangzhou.aliyuncs.com"
+  repository: "goodrain/trivy-operator"
   # -- tag is an override of the image tag, which is by default set by the
   # appVersion field in Chart.yaml.
-  tag: ""
+  tag: "0.16.4"
   # -- pullPolicy set the operator pullPolicy
   pullPolicy: IfNotPresent
   # -- pullSecrets set the operator pullSecrets
@@ -264,9 +265,9 @@ trivy:
   createConfig: true
   image:
     # -- registry of the Trivy image
-    registry: ghcr.io
+    registry: registry.cn-hangzhou.aliyuncs.com
     # -- repository of the Trivy image
-    repository: aquasecurity/trivy
+    repository: goodrain/trivy
     # -- tag version of the Trivy image
     tag: 0.45.1
     # -- imagePullSecret is the secret name to be used when pulling trivy image from private registries example : reg-secret
@@ -278,13 +279,13 @@ trivy:
 
   # -- mode is the Trivy client mode. Either Standalone or ClientServer. Depending
   # on the active mode other settings might be applicable or required.
-  mode: Standalone
+  mode: ClientServer
 
   # -- whether to use a storage class for trivy server or emptydir (one mey want to use ephemeral storage)
   storageClassEnabled: true
 
   # -- storageClassName is the name of the storage class to be used for trivy server PVC. If empty, tries to find default storage class
-  storageClassName: ""
+  storageClassName: rainbondvolumerwx
 
   # -- podLabels is the extra pod labels to be used for trivy server
   podLabels:
@@ -315,7 +316,8 @@ trivy:
   sslCertDir: ~
 
   # -- The registry to which insecure connections are allowed. There can be multiple registries with different keys.
-  insecureRegistries: {}
+  insecureRegistries:
+    rbdRegistry: goodrain.me
   #  pocRegistry: poc.myregistry.harbor.com.pl
   #  qaRegistry: qa.registry.aquasec.com
   #  internalRegistry: registry.registry.svc:5000
@@ -382,7 +384,7 @@ trivy:
 
   # -- serverURL is the endpoint URL of the Trivy server. Required in ClientServer mode.
   #
-  # serverURL: "https://trivy.trivy:4975"
+  serverURL: "https://trivy.trivy:4975"
 
   # -- clientServerSkipUpdate is the flag to enable skip databases update for Trivy client.
   # Only applicable in ClientServer mode.
@@ -414,12 +416,12 @@ trivy:
   serverCustomHeaders: ~
   # serverCustomHeaders: "foo=bar"
 
-  dbRegistry: "ghcr.io"
-  dbRepository: "aquasecurity/trivy-db"
+  dbRegistry: "ccr.ccs.tencentyun.com"
+  dbRepository: "inative/trivy-db"
 
   # -- javaDbRegistry is the registry for the Java vulnerability database.
-  javaDbRegistry: "ghcr.io"
-  javaDbRepository: "aquasecurity/trivy-java-db"
+  javaDbRegistry: "ccr.ccs.tencentyun.com"
+  javaDbRepository: "inative/trivy-java-db"
 
   # -- The Flag to enable insecure connection for downloading trivy-db via proxy (air-gaped env)
   #
@@ -544,9 +546,9 @@ automountServiceAccountToken: true
 
 nodeCollector:
   # -- registry of the node-collector image
-  registry: ghcr.io
+  registry: registry.cn-hangzhou.aliyuncs.com
   # -- repository of the node-collector image
-  repository: aquasecurity/node-collector
+  repository: goodrain/node-collector
   # -- tag version of the node-collector image
   tag: 0.0.8
   # -- imagePullSecret is the secret name to be used when pulling node-collector image from private registries example : reg-secret
